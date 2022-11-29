@@ -1,0 +1,139 @@
+https://simon9.medium.com/how-to-create-user-and-grant-permissions-to-the-user-in-kubernetes-f60147c107a
+
+
+Generate the key:
+
+openssl genrsa -out  merikech.key 2048
+openssl req -new -key merikech.key -out merikech.csr -subj "/CN=merikech/O=dev"
+
+
+Create the scertificate sign request:
+
+cat <<EOF > csr.yaml
+apiVersion: certificates.k8s.io/v1
+kind: CertificateSigningRequest
+metadata:
+  name: merikech
+spec:
+  request: $(cat merikech.csr | base64 | tr -d '\n')
+  signerName: kubernetes.io/kube-apiserver-client
+  usages:
+  - cleint auth
+EOF
+
+kubectl apply -f csr.yaml
+kubectl get csr
+
+Create namesapce:
+
+kubectl create ns dev
+
+
+Approve the certificate:
+
+kubectl certificate approve merikech
+
+Create the Role with the permissions:
+
+
+
+cat <<EOF> role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: dev
+  name: dev-role
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods"]
+  verbs: ["create","list", "get", "update","delete"]
+EOF
+
+kubectl get role -n dev
+NAME       CREATED AT
+dev-role   2022-11-08T21:35:58Z
+
+kubectl describe  role dev-role  -n dev
+Name:         dev-role
+Labels:       <none>
+Annotations:  <none>
+PolicyRule:
+  Resources  Non-Resource URLs  Resource Names  Verbs
+  ---------  -----------------  --------------  -----
+  pods       []                 []              [create list get update delete]
+[root@master merikech]#
+
+
+
+Bind the user and role:
+
+cat <<EOF> role-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: merikech-rolebinding
+  namespace: dev
+subjects:
+- kind: User
+  name: merikech
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: dev-role
+  apiGroup: rbac.authorization.k8s.io
+EOF
+
+
+kubectl get rolebindings.rbac.authorization.k8s.io -n dev
+NAME                   ROLE            AGE
+merikech-rolebinding   Role/dev-role   4m5s
+
+
+kubectl describe  rolebindings.rbac.authorization.k8s.io merikech-rolebinding -n dev
+Name:         merikech-rolebinding
+Labels:       <none>
+Annotations:  <none>
+Role:
+  Kind:  Role
+  Name:  dev-role
+Subjects:
+  Kind  Name      Namespace
+  ----  ----      ---------
+  User  merikech
+  
+  
+  
+Building a Kube Config for merikech:
+
+Get crt:
+
+kubectl get csr merikech -o jsonpath='{.status.certificate}' | base64 --decode > merikech/merikech.crt
+
+get current context and cluster:
+
+kubectl config view
+
+
+Set credentials:
+kubectl config set-credentials merikech --client-key=merikech/merikech.key --client-certificate=merikech/merikech.crt --embed-certs=true
+
+Set context:
+
+kubectl config set-context merikech --cluster=kubernetes --user=merikech
+
+Use context:
+
+kubectl config use-context merikech
+
+Check privileges:
+
+kubectl auth can-i create deployments
+ 
+ 
+
+
+
+
+
+
+

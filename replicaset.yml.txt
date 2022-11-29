@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Replicaset
+metadata:
+  name: myreplicaset
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+	  type: frontend
+  template:
+    metadata:
+	  labels:
+	    type: frontend
+    spec:
+	  containers:
+	  - name: nginx
+	    image: nginx:1.23
+		ports:
+		- containerPort: 80

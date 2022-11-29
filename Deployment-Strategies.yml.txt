@@ -1,0 +1,71 @@
+Recreate:
+
+cat <<EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy
+  labels:
+    name: recreatedeploy
+spec:
+  replicas: 3
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      type: frontend
+  template:
+    metadata:
+      labels:
+        type: frontend
+	spec:
+	  containers:
+	  - name: nginx
+	    image: nginx
+		containers:
+		- containerPort: 80
+		resources:
+		  limits:
+		    cpu: "800m"
+			memory: "512Mi"
+		  request:
+		    cpu: "400m"
+			memory: "256Mi"
+EOF
+    		
+			
+RollingUpdate:
+
+cat <<EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy
+  labels:
+    name: rollingupdatedeploy
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+	  
+  selector:
+    matchLabels:
+      type: frontend
+  template:
+    metadata:
+      labels:
+        type: frontend
+	spec:
+	  containers:
+	  - name: nginx
+	    image: nginx
+		  ports:
+		  - containerPort: 80
+		resources:
+		  limits:
+		    cpu: "800m"
+			memory: "512Mi"
+		  request:
+		    cpu: "400m"
+			memory: "256Mi"
+EOF

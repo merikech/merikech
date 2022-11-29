@@ -1,6 +1,6 @@
 Namespaces:
 
-kubectl create namespace namespace-namespace
+kubectl create namespace namespace-namespaces
 
 cat <<EOF > namespace.yml
 

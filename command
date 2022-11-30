@@ -12,7 +12,7 @@ metadata:
     name: production
 EOF	
 
-kubectl delete namespace namespace-name
+kubectl delete namespace "namespace-name"
 
 kubectl get namespaces
 

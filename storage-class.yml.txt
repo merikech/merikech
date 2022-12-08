@@ -1,0 +1,22 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-storageclasse
+provisioner: example.com/external-nfs
+parameters:
+  server: nfs-server
+  path: /share
+  readOnly: "false"
+  
+  
+#####################LOCAL###################  
+cat <<EOF | kubectl apply -f -
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: delayed-volume-sc
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+EOF  
+  
+  

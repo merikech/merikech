@@ -1,6 +1,32 @@
-apiVersion: v1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: mydaemonset
+  name: fluentd-elastic
+  namespace: kube-system
+  labels:
+   k8s-app: fluentd-logging
 spec:
-  
+  selector:
+   matchLabel:
+    name: fluentd-elastic
+  template:
+   metadata:
+     labels: 
+	   name: fluentd-elastic
+   spec:
+     containers:
+	 - name: fluentd-elastic
+	   image: quay.io/fluentd_elasticsearch/fluentd:v2.5.2
+	   resources:
+	     limits:
+		  memory: 60mi
+		 requests:
+		  memory: 100mi
+		  cpu: 50m
+	 volumeMounts:
+	 - name: varlog
+	   mountPath: /var/log
+	volumes:
+	- name: varlog
+	  hostpath:
+	   path: /var/log
